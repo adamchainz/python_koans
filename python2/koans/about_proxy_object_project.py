@@ -21,12 +21,33 @@ from runner.koan import *
 
 class Proxy(object):
     def __init__(self, target_object):
-        # WRITE CODE HERE
+        from collections import OrderedDict
+        self._messages = OrderedDict()
 
         #initialize '_obj' attribute last. Trust me on this!
         self._obj = target_object
 
-    # WRITE CODE HERE
+    def __getattr__(self, name):
+        self._messages.setdefault(name, 0)
+        self._messages[name] += 1
+        return getattr(self._obj, name)
+
+    def __setattr__(self, name, val):
+        if name in ('_messages', '_obj'):
+            super(Proxy, self).__setattr__(name, val)
+        else:
+            self._messages.setdefault(name, 0)
+            self._messages[name] += 1
+            return setattr(self._obj, name, val)
+
+    def messages(self):
+        return self._messages.keys()
+
+    def was_called(self, name):
+        return name in self._messages
+
+    def number_of_times_called(self, name):
+        return self._messages.get(name, 0)
 
 
 # The proxy object should pass the following Koan:
